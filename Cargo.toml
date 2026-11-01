@@ -6,12 +6,14 @@ edition = "2024"
 resolver = "3"
 members = [
 	"crates/steamless-core",
+	"crates/steamless-ipc",
 	"crates/steamless-daemon",
 	"crates/steamless-cli",
 ]
 
 [workspace.dependencies]
 steamless-core = { path = "crates/steamless-core" }
+steamless-ipc = { path = "crates/steamless-ipc" }
 
 anyhow = "1"
 clap = { version = "4.6.7", features = ["derive"] }
@@ -23,6 +25,9 @@ log = "0.4.35"
 # DEVICE
 evdev = "0.13.2" # https://github.com/emberian/evdev
 nix = { version = "0.31.3", features = ["ioctl"] } # https://github.com/nix-rust/nix
+
+# IPC
+bincode = "2.0.1" # https://github.com/bincode-org/bincode
 
 # CONFIG
 serde = { version = "1.0.229", features = ["derive"] } # https://github.com/serde-rs/serde
