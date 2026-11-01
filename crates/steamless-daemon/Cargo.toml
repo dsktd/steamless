@@ -6,4 +6,8 @@ edition.workspace = true
 [dependencies]
 steamless-core.workspace = true
 anyhow.workspace = true
+clap.workspace = true
+crossbeam-channel.workspace = true
+dirs.workspace = true
+env_logger.workspace = true
 log.workspace = true
