@@ -150,6 +150,12 @@ left speed le16, left gain, right speed le16, right gain]`, 10 bytes;
   nothing to grab; conversely Chromium holding it starves the kernel path.
   This is why the udev rule in section 8 exists.
 
+Verified on a live 2026 controller + puck (2026-11-01, `steamless-cli decode`,
+each control pressed by name): A, B, X, Y, D-pad x4, Steam, view, menu, quick
+access, LB, RB, LT/RT (0..32767 and the full-pull bits), L3, R3, all four
+grips, both pad clicks, both sticks (full range, sign), the touch flags for
+sticks, pads and grips, battery report.
+
 Unverified (must capture before relying on)
 
 - Setting numbers: `SETTING_LIZARD_MODE` and `SETTING_STEAM_WATCHDOG_ENABLE`
@@ -241,6 +247,11 @@ Semantics
   that its press arrives on release). Chords are the only mode shift in M1.
 - Repeat: `key:` targets get kernel autorepeat (uinput keyboard
   `EV_REP`), so held volume keeps going. Pad buttons do not repeat.
+- Flicks: `lstick = "keys:KEY_UP,KEY_DOWN,KEY_LEFT,KEY_RIGHT"` holds the
+  key of the dominant direction once the stick passes `deadzone.stick`,
+  releases it below 0.8 of that; the keyboard repeats at 400/150 ms.
+- Profiles are switched at run time with `IpcRequest::Activate`; `pad` is
+  the built-in Xbox layout unless the file defines it.
 - Lizard policy: `off` (the default) sends the lizard-off sequence
   immediately on open and on every reconnect (`0x79` connect, puck slot
   re-open). `on` leaves firmware defaults (arrow keys/mouse) and still

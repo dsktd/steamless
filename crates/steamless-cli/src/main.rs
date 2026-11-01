@@ -15,12 +15,18 @@ use steamless_core::device::ibex;
 use steamless_core::device::ibex::Report;
 use steamless_core::state::Button;
 use steamless_core::state::ControllerState;
+use steamless_ipc::IpcRequest;
+use steamless_ipc::IpcResponse;
 
 /// Stick and trigger moves smaller than this are not printed.
 const MOVE: i32 = 2000;
 
 #[derive(Parser)]
 struct Cli {
+    /// Daemon socket; default $XDG_RUNTIME_DIR/steamless.sock
+    #[arg(long, global = true, env = "STEAMLESS_SOCKET")]
+    socket: Option<PathBuf>,
+
     #[command(subcommand)]
     action: Action,
 }
@@ -34,6 +40,18 @@ enum Action {
     /// Print button presses and releases and stick moves
     #[command(name = "decode")]
     Decode(Source),
+
+    /// Switch every controller to a profile
+    #[command(name = "activate")]
+    Activate { name: String },
+
+    /// Print the active profile and the controllers
+    #[command(name = "status")]
+    Status,
+
+    /// Make the daemon re-read its config
+    #[command(name = "reload")]
+    Reload,
 }
 
 #[derive(Args)]
@@ -46,9 +64,34 @@ struct Source {
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
     let cli = Cli::parse();
-    match cli.action {
-        Action::Dump(source) => dump(source)?,
-        Action::Decode(source) => decode(source)?,
+    let request = match cli.action {
+        Action::Dump(source) => return Ok(dump(source)?),
+        Action::Decode(source) => return Ok(decode(source)?),
+        Action::Activate { name } => IpcRequest::Activate(name),
+        Action::Status => IpcRequest::Status,
+        Action::Reload => IpcRequest::Reload,
+    };
+    let socket = cli.socket.unwrap_or(steamless_ipc::path::default_socket());
+    match steamless_ipc::client::request(&socket, request)? {
+        IpcResponse::Ok => {}
+        IpcResponse::Status(status) => {
+            println!("profile {}", status.profile);
+            for controller in status.controllers {
+                let battery = match controller.battery {
+                    Some(level) => format!("{level}%"),
+                    None => "?".to_string(),
+                };
+                let lizard = if controller.lizard { "on" } else { "off" };
+                println!(
+                    "hidraw{} {} battery {battery} lizard {lizard}",
+                    controller.id, controller.path
+                );
+            }
+        }
+        IpcResponse::Error(err) => {
+            println!("{err}");
+            std::process::exit(1);
+        }
     }
     Ok(())
 }

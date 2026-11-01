@@ -66,33 +66,39 @@
               default = self.packages.${pkgs.stdenv.hostPlatform.system}.default;
             };
             config = lib.mkOption {
-              type = toml.type;
+              type = lib.types.either lib.types.path toml.type;
               default = { };
-              description = "Rendered to /etc/steamless/config.toml; empty runs the Xbox layout.";
+              description = "Config file, or an attrset rendered to TOML; empty runs the Xbox layout.";
             };
           };
 
           config = lib.mkIf cfg.enable {
-            # uinput module, /dev/uinput 0660 group uinput
-            hardware.uinput.enable = true;
-            users.users.${cfg.user}.extraGroups = [ "uinput" ];
+            boot.kernelModules = [ "uinput" ];
+            users.users.${cfg.user}.extraGroups = [ "input" ];
 
             # After 70-uaccess and before 73-seat-late applies it, so Chromium cannot open the node
             services.udev.packages = [
               (pkgs.writeTextDir "lib/udev/rules.d/71-steamless.rules" ''
                 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="28de", ATTRS{idProduct}=="130[345]", MODE="0600", OWNER="${cfg.user}", TAG-="uaccess"
+                KERNEL=="uinput", SUBSYSTEM=="misc", MODE="0660", GROUP="input", OPTIONS+="static_node=uinput"
               '')
             ];
 
-            environment.etc."steamless/config.toml".source = toml.generate "config.toml" cfg.config;
+            environment.etc."steamless/config.toml".source =
+              if builtins.isAttrs cfg.config then toml.generate "config.toml" cfg.config else cfg.config;
+
+            # Clients reach the daemon with STEAMLESS_SOCKET=/run/steamless/steamless.sock
+            environment.variables.STEAMLESS_SOCKET = "/run/steamless/steamless.sock";
 
             systemd.services.steamless = {
               description = "Steam Controller daemon";
               wantedBy = [ "multi-user.target" ];
               after = [ "systemd-udev-settle.service" ];
+              environment.XDG_RUNTIME_DIR = "/run/steamless";
               serviceConfig = {
                 User = cfg.user;
-                ExecStart = "${lib.getExe cfg.package} --config /etc/steamless/config.toml";
+                RuntimeDirectory = "steamless";
+                ExecStart = "${lib.getExe' cfg.package "steamless-daemon"} --config /etc/steamless/config.toml";
                 Restart = "always";
                 RestartSec = 2;
               };

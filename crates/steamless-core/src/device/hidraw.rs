@@ -128,7 +128,7 @@ impl Hidraw {
     /// Read reports until the node goes away, sending decoded events.
     pub fn run(
         self,
-        tx_event: Sender<Event>,
+        tx_event: Sender<impl From<Event>>,
         lizard_off: bool,
     ) {
         let id = self.id();
@@ -136,7 +136,10 @@ impl Hidraw {
             // Empty puck slots and the pogo interface refuse commands
             debug!("{id} lizard off: {err}");
         }
-        if tx_event.send(Event::Opened(id, self.path.clone())).is_err() {
+        if tx_event
+            .send(Event::Opened(id, self.path.clone()).into())
+            .is_err()
+        {
             return;
         }
         let mut buf = [0_u8; 64];
@@ -160,12 +163,12 @@ impl Hidraw {
             };
             match report {
                 Report::Input(state) => {
-                    if tx_event.send(Event::State(id, state)).is_err() {
+                    if tx_event.send(Event::State(id, state).into()).is_err() {
                         return;
                     }
                 }
                 Report::Battery(battery) => {
-                    if tx_event.send(Event::Battery(id, battery)).is_err() {
+                    if tx_event.send(Event::Battery(id, battery).into()).is_err() {
                         return;
                     }
                 }
@@ -176,14 +179,14 @@ impl Hidraw {
                     {
                         warn!("{id} lizard off: {err}");
                     }
-                    if tx_event.send(Event::Wireless(id, wireless)).is_err() {
+                    if tx_event.send(Event::Wireless(id, wireless).into()).is_err() {
                         return;
                     }
                 }
                 Report::Other(report_id) => trace!("{id} unhandled report {report_id:#04x}"),
             }
         }
-        let _ = tx_event.send(Event::Closed(id));
+        let _ = tx_event.send(Event::Closed(id).into());
     }
 }
 
@@ -236,7 +239,7 @@ impl Open {
 
 /// Rescan every 2 s and start a reader thread for every new node.
 pub fn start(
-    tx_event: Sender<Event>,
+    tx_event: Sender<impl From<Event> + Send + 'static>,
     lizard_off: bool,
 ) {
     let _handle = std::thread::spawn(move || {
