@@ -182,11 +182,12 @@ impl Engine {
             IpcRequest::Reload => {
                 let config = crate::load(self.path.as_deref())?;
                 let profile = config.get(&self.active)?;
-                let keys = config.keys();
+                // The uinput key set is fixed at creation; build the new keyboard first so a
+                // failure changes nothing, release through the old one, then replace it
+                let mut keys = Keys::new(config.keys())?;
                 self.config = config;
                 self.activate(self.active.clone(), profile);
-                // The uinput key set is fixed at creation; release first, then replace
-                self.keys = Keys::new(keys)?;
+                std::mem::swap(&mut self.keys, &mut keys);
                 Ok(IpcResponse::Ok)
             }
         }
