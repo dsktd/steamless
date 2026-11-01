@@ -564,6 +564,7 @@ dependencies = [
  "env_logger",
  "log",
  "steamless-core",
+ "steamless-ipc",
 ]
 
 [[package]]

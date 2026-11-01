@@ -247,6 +247,9 @@ pub struct Daemon {
     pub imu: bool,
 }
 
+/// Name of the built-in Xbox layout.
+pub const PAD: &str = "pad";
+
 /// A whole config file. The default has no profiles and runs the Xbox layout.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Config {
@@ -281,20 +284,35 @@ impl Config {
         })
     }
 
-    /// `daemon.active`, else the only profile, else the built-in Xbox layout.
-    pub fn profile(&self) -> Result<Profile> {
+    /// `daemon.active`, else the only profile, else the built-in [`PAD`].
+    pub fn active(&self) -> Result<String> {
         if let Some(name) = &self.daemon.active {
-            return self
-                .profiles
-                .get(name)
-                .cloned()
-                .ok_or(anyhow!("No profile named {name}"));
+            return Ok(name.clone());
         }
         match self.profiles.len() {
-            0 => Ok(Profile::xbox()),
-            1 => Ok(self.profiles.values().next().cloned().unwrap()),
+            0 => Ok(PAD.to_string()),
+            1 => Ok(self.profiles.keys().next().cloned().unwrap()),
             _ => Err(anyhow!("Several profiles and no daemon.active")),
         }
+    }
+
+    /// The named profile; [`PAD`] is the Xbox layout unless the file defines it.
+    pub fn get(
+        &self,
+        name: &str,
+    ) -> Result<Profile> {
+        if let Some(profile) = self.profiles.get(name) {
+            return Ok(profile.clone());
+        }
+        if name == PAD {
+            return Ok(Profile::xbox());
+        }
+        Err(anyhow!("No profile named {name}"))
+    }
+
+    /// The active profile.
+    pub fn profile(&self) -> Result<Profile> {
+        self.get(&self.active()?)
     }
 
     /// Key codes any profile can send.
@@ -397,6 +415,23 @@ impl Mapper {
         for target in std::mem::take(&mut self.pressed).into_values() {
             emit(target, false, &mut outputs);
         }
+        outputs
+    }
+
+    /// Swap the profile, returning the releases of everything the old one held and centred axes.
+    pub fn activate(
+        &mut self,
+        profile: Profile,
+    ) -> Vec<Output> {
+        let mut outputs = self.release_all();
+        for target in self.profile.axes.values() {
+            match *target {
+                Target::Stick(stick) => outputs.push(Output::Stick(stick, 0, 0)),
+                Target::Trigger(trigger) => outputs.push(Output::Trigger(trigger, 0)),
+                _ => {}
+            }
+        }
+        self.profile = profile;
         outputs
     }
 
@@ -675,6 +710,33 @@ mod test {
         let mut drift = idle;
         drift.lstick = Stick { x: 0x0139, y: -123 };
         assert_eq!(mapper.map(&idle, &drift), vec![]);
+    }
+
+    #[test]
+    fn test_mapper_activate() {
+        let mut mapper = Mapper::new(Profile::xbox());
+        let idle = ControllerState::default();
+        let a = pressed(&[Button::A]);
+        let steam = pressed(&[Button::Steam]);
+        mapper.map(&idle, &a);
+        let outputs = mapper.activate(Config::parse(SETTOP).unwrap().profile().unwrap());
+        assert_eq!(outputs[0], Output::Button(PadButton::South, false));
+        assert!(outputs.contains(&Output::Stick(PadStick::Left, 0, 0)));
+        assert!(outputs.contains(&Output::Trigger(PadTrigger::Rt, 0)));
+        // Releasing A after the switch sends nothing, Steam is the new profile's key
+        assert_eq!(mapper.map(&a, &idle), vec![]);
+        assert_eq!(
+            mapper.map(&idle, &steam),
+            vec![Output::Key(evdev::KeyCode::KEY_HOMEPAGE.0, true)]
+        );
+    }
+
+    #[test]
+    fn test_config_active() {
+        let config = Config::default();
+        assert_eq!(config.active().unwrap(), PAD);
+        assert_eq!(config.get(PAD).unwrap(), Profile::xbox());
+        assert!(config.get("browser").is_err());
     }
 
     #[test]

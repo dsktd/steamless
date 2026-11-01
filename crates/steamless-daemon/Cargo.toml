@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 steamless-core.workspace = true
+steamless-ipc.workspace = true
 anyhow.workspace = true
 clap.workspace = true
 crossbeam-channel.workspace = true
