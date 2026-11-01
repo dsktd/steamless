@@ -8,8 +8,10 @@ profile and talks to the daemon over a local socket. Rust.
 
 Prior art for the raw protocol (cited, not copied):
 
-- Linux `hid-steam` 7.3 (`hid-steam-v7.3.c` in this repo): Ibex report
-  layout, feature-report command path, lizard mode, haptics, `client_opened`.
+- Linux `hid-steam` 7.3 (`drivers/hid/hid-steam.c` at tag v7.3,
+  https://github.com/torvalds/linux/blob/v7.3/drivers/hid/hid-steam.c; GPL-2.0,
+  read as reference, not copied here): Ibex report layout, feature-report
+  command path, lizard mode, haptics, `client_opened`.
 - SDL3 HIDAPI Steam driver (`SDL_HINT_JOYSTICK_HIDAPI_STEAM`,
   https://wiki.libsdl.org/SDL3/SDL_HINT_JOYSTICK_HIDAPI_STEAM): userspace
   take-over of the controller, off by default, Bluetooth path.
@@ -97,7 +99,7 @@ udev monitor if it bothers anyone.
 
 ## 3. Device protocol notes (2026 controller, "Ibex")
 
-Known from `hid-steam-v7.3.c`
+Known from `hid-steam.c` (v7.3)
 
 - Interfaces: wired = 1 unified HID interface; puck = 7 interfaces, 2-5 are
   controller slots, 6 is the pogo-pin interface (collection usage
@@ -159,7 +161,7 @@ sticks, pads and grips, battery report.
 Unverified (must capture before relying on)
 
 - Setting numbers: `SETTING_LIZARD_MODE` and `SETTING_STEAM_WATCHDOG_ENABLE`
-  are enum positions in the C file; copy the numeric values from a build of
+  are enum positions in the driver source; copy the numeric values from a build of
   the driver, not by counting.
 - Whether `0x87` needs the feature report padded to 64 bytes over hidraw
   (`HIDIOCSFEATURE` sends what you give it; the kernel pads to report len).
