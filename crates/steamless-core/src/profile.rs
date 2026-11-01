@@ -390,6 +390,16 @@ impl Mapper {
         outputs
     }
 
+    /// Release everything still held, without the late tap of a chord hold.
+    pub fn release_all(&mut self) -> Vec<Output> {
+        let mut outputs = Vec::new();
+        self.chord = None;
+        for target in std::mem::take(&mut self.pressed).into_values() {
+            emit(target, false, &mut outputs);
+        }
+        outputs
+    }
+
     fn press(
         &mut self,
         button: Button,
@@ -619,6 +629,21 @@ mod test {
                 Output::Button(PadButton::Select, false),
             ]
         );
+    }
+
+    #[test]
+    fn test_mapper_release_all() {
+        let mut mapper = settop();
+        let idle = ControllerState::default();
+        let view_up = pressed(&[Button::View, Button::DpadUp]);
+        mapper.map(&idle, &pressed(&[Button::View]));
+        mapper.map(&pressed(&[Button::View]), &view_up);
+        assert_eq!(
+            mapper.release_all(),
+            vec![Output::Key(evdev::KeyCode::KEY_VOLUMEUP.0, false)]
+        );
+        mapper.map(&idle, &pressed(&[Button::View]));
+        assert_eq!(mapper.release_all(), vec![]);
     }
 
     #[test]

@@ -99,10 +99,7 @@ fn disconnect(
     let Some(mut controller) = controllers.remove(&id) else {
         return;
     };
-    let outputs = controller
-        .mapper
-        .map(&controller.prev, &ControllerState::default());
-    let _ = keys.send(&outputs);
+    let _ = keys.send(&controller.mapper.release_all());
     info!("{id} disconnected");
 }
 
