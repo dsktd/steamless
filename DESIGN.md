@@ -150,6 +150,12 @@ left speed le16, left gain, right speed le16, right gain]`, 10 bytes;
   nothing to grab; conversely Chromium holding it starves the kernel path.
   This is why the udev rule in section 8 exists.
 
+Verified on a live 2026 controller + puck (2026-11-01, `steamless-cli decode`,
+each control pressed by name): A, B, X, Y, D-pad x4, Steam, view, menu, quick
+access, LB, RB, LT/RT (0..32767 and the full-pull bits), L3, R3, all four
+grips, both pad clicks, both sticks (full range, sign), the touch flags for
+sticks, pads and grips, battery report.
+
 Unverified (must capture before relying on)
 
 - Setting numbers: `SETTING_LIZARD_MODE` and `SETTING_STEAM_WATCHDOG_ENABLE`
