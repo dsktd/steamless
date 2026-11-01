@@ -241,6 +241,11 @@ Semantics
   that its press arrives on release). Chords are the only mode shift in M1.
 - Repeat: `key:` targets get kernel autorepeat (uinput keyboard
   `EV_REP`), so held volume keeps going. Pad buttons do not repeat.
+- Flicks: `lstick = "keys:KEY_UP,KEY_DOWN,KEY_LEFT,KEY_RIGHT"` holds the
+  key of the dominant direction once the stick passes `deadzone.stick`,
+  releases it below 0.8 of that; the keyboard repeats at 400/150 ms.
+- Profiles are switched at run time with `IpcRequest::Activate`; `pad` is
+  the built-in Xbox layout unless the file defines it.
 - Lizard policy: `off` (the default) sends the lizard-off sequence
   immediately on open and on every reconnect (`0x79` connect, puck slot
   re-open). `on` leaves firmware defaults (arrow keys/mouse) and still

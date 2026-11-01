@@ -1,20 +1,44 @@
-# Kiosk profile for the settop: Steam goes home, view + D-pad drives the volume.
-# Anything not listed keeps the built-in Xbox layout.
+# Kiosk profiles for the settop: `pad` while a game runs, `browser` while the browser is up.
+# Switch with `steamless-cli activate browser`. Anything not listed keeps the built-in Xbox layout.
 
 [daemon]
-active = "settop"
+active = "pad"
 lizard = "off"
 
-[profile.settop]
+# Xbox pad; Steam goes home, view + D-pad drives the volume.
+[profile.pad]
 layout = "xbox"
 deadzone.stick = 0.10
 deadzone.trigger = 0.05
 
-[profile.settop.buttons]
+[profile.pad.buttons]
 steam = "key:KEY_HOMEPAGE"
 
 # Hold view: D-pad up/down/left are volume up/down/mute. Tapped alone, view is still select.
-[[profile.settop.chord]]
+[[profile.pad.chord]]
+hold = "view"
+dpad_up = "key:KEY_VOLUMEUP"
+dpad_down = "key:KEY_VOLUMEDOWN"
+dpad_left = "key:KEY_MUTE"
+
+# Arrow keys for page navigation; the left stick flicks them, one key per flick.
+[profile.browser]
+layout = "xbox"
+deadzone.stick = 0.5
+
+[profile.browser.buttons]
+dpad_up = "key:KEY_UP"
+dpad_down = "key:KEY_DOWN"
+dpad_left = "key:KEY_LEFT"
+dpad_right = "key:KEY_RIGHT"
+a = "key:KEY_ENTER"
+b = "key:KEY_BACKSPACE"
+steam = "key:KEY_HOMEPAGE"
+
+[profile.browser.axes]
+lstick = "keys:KEY_UP,KEY_DOWN,KEY_LEFT,KEY_RIGHT"
+
+[[profile.browser.chord]]
 hold = "view"
 dpad_up = "key:KEY_VOLUMEUP"
 dpad_down = "key:KEY_VOLUMEDOWN"

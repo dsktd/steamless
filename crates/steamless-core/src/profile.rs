@@ -62,6 +62,8 @@ pub enum Target {
     Trigger(PadTrigger),
     /// Evdev key code on the virtual keyboard.
     Key(u16),
+    /// A stick flicked up, down, left or right holds one of these keys.
+    Keys([u16; 4]),
     None,
 }
 impl FromStr for Target {
@@ -72,8 +74,14 @@ impl FromStr for Target {
             return Ok(Target::None);
         }
         if let Some(name) = target.strip_prefix("key:") {
-            let key = evdev::KeyCode::from_str(name).or(Err(anyhow!("Unknown key {name}")))?;
-            return Ok(Target::Key(key.0));
+            return Ok(Target::Key(key(name)?));
+        }
+        if let Some(names) = target.strip_prefix("keys:") {
+            let keys: Vec<u16> = names.split(',').map(key).collect::<Result<_>>()?;
+            let Ok(keys) = keys.try_into() else {
+                return Err(anyhow!("{target} needs four keys: up, down, left, right"));
+            };
+            return Ok(Target::Keys(keys));
         }
         let Some(name) = target.strip_prefix("pad:") else {
             return Err(anyhow!("Unknown target {target}"));
@@ -101,6 +109,11 @@ impl FromStr for Target {
             _ => return Err(anyhow!("Unknown pad target {name}")),
         })
     }
+}
+
+fn key(name: &str) -> Result<u16> {
+    let key = evdev::KeyCode::from_str(name).or(Err(anyhow!("Unknown key {name}")))?;
+    Ok(key.0)
 }
 
 /// While `hold` is down, `buttons` map to their chord targets and `hold` emits nothing.
@@ -159,9 +172,11 @@ impl Profile {
         self.buttons
             .values()
             .chain(chords)
-            .filter_map(|target| match target {
-                Target::Key(code) => Some(*code),
-                _ => None,
+            .chain(self.axes.values())
+            .flat_map(|target| match target {
+                Target::Key(code) => vec![*code],
+                Target::Keys(codes) => codes.to_vec(),
+                _ => vec![],
             })
             .collect()
     }
@@ -197,7 +212,9 @@ impl TryFrom<ProfileToml> for Profile {
             };
             let target: Target = target.parse()?;
             match (axis.is_trigger(), target) {
-                (_, Target::None) | (true, Target::Trigger(_)) | (false, Target::Stick(_)) => {}
+                (_, Target::None)
+                | (true, Target::Trigger(_))
+                | (false, Target::Stick(_) | Target::Keys(_)) => {}
                 _ => return Err(anyhow!("Cannot map axis {source} to {target:?}")),
             }
             profile.axes.insert(axis, target);
@@ -225,7 +242,7 @@ fn button_binding(
         return Err(anyhow!("{source} is an axis, not a button"));
     };
     let target: Target = target.parse()?;
-    if let Target::Stick(_) = target {
+    if let Target::Stick(_) | Target::Keys(_) = target {
         return Err(anyhow!("Cannot map button {source} to a stick"));
     }
     Ok((button, target))
@@ -246,6 +263,9 @@ pub struct Daemon {
     pub lizard: Lizard,
     pub imu: bool,
 }
+
+/// Share of the deadzone a flicked stick must fall below to release its key.
+const FLICK_RELEASE: f32 = 0.8;
 
 /// Name of the built-in Xbox layout.
 pub const PAD: &str = "pad";
@@ -370,6 +390,8 @@ pub struct Mapper {
     chord_used: bool,
     /// What each pressed button emitted, so its release matches.
     pressed: BTreeMap<Button, Target>,
+    /// The key each flicked axis holds.
+    flicks: BTreeMap<Axis, u16>,
 }
 impl Mapper {
     pub fn new(profile: Profile) -> Self {
@@ -378,6 +400,7 @@ impl Mapper {
             chord: None,
             chord_used: false,
             pressed: BTreeMap::new(),
+            flicks: BTreeMap::new(),
         }
     }
 
@@ -397,6 +420,29 @@ impl Mapper {
             }
         }
         for (axis, target) in &self.profile.axes {
+            if let Target::Keys(keys) = target {
+                let held = self.flicks.get(axis).copied();
+                let flick = flick(
+                    axis_value(*axis, state),
+                    *keys,
+                    self.profile.deadzone_stick,
+                    held,
+                );
+                if flick == held {
+                    continue;
+                }
+                if let Some(key) = held {
+                    outputs.push(Output::Key(key, false));
+                }
+                if let Some(key) = flick {
+                    outputs.push(Output::Key(key, true));
+                }
+                match flick {
+                    Some(key) => self.flicks.insert(*axis, key),
+                    None => self.flicks.remove(axis),
+                };
+                continue;
+            }
             let before = self.axis(*axis, *target, prev);
             let after = self.axis(*axis, *target, state);
             if before != after
@@ -414,6 +460,9 @@ impl Mapper {
         self.chord = None;
         for target in std::mem::take(&mut self.pressed).into_values() {
             emit(target, false, &mut outputs);
+        }
+        for key in std::mem::take(&mut self.flicks).into_values() {
+            outputs.push(Output::Key(key, false));
         }
         outputs
     }
@@ -506,13 +555,10 @@ impl Mapper {
     ) -> Option<Output> {
         match target {
             Target::Stick(stick) => {
-                let (x, y) = match axis {
-                    Axis::LStick => stick_value(state.lstick),
-                    Axis::RStick => stick_value(state.rstick),
-                    Axis::LPad => pad_value(state.lpad),
-                    Axis::RPad => pad_value(state.rpad),
-                    Axis::Lt | Axis::Rt => return None,
-                };
+                if axis.is_trigger() {
+                    return None;
+                }
+                let (x, y) = axis_value(axis, state);
                 let (x, y) = deadzone_stick(x, y, self.profile.deadzone_stick);
                 Some(Output::Stick(stick, x, y.saturating_neg()))
             }
@@ -527,7 +573,7 @@ impl Mapper {
                     deadzone_trigger(value, self.profile.deadzone_trigger),
                 ))
             }
-            Target::Button(_) | Target::Key(_) | Target::None => None,
+            Target::Button(_) | Target::Key(_) | Target::Keys(_) | Target::None => None,
         }
     }
 }
@@ -541,8 +587,47 @@ fn emit(
         Target::Button(button) => outputs.push(Output::Button(button, pressed)),
         Target::Key(code) => outputs.push(Output::Key(code, pressed)),
         Target::Trigger(trigger) => outputs.push(Output::Trigger(trigger, pressed as u8 * 255)),
-        Target::Stick(_) | Target::None => {}
+        Target::Stick(_) | Target::Keys(_) | Target::None => {}
     }
+}
+
+/// X and Y of a stick or trackpad, Y up positive; triggers are (0, 0).
+fn axis_value(
+    axis: Axis,
+    state: &ControllerState,
+) -> (i16, i16) {
+    match axis {
+        Axis::LStick => stick_value(state.lstick),
+        Axis::RStick => stick_value(state.rstick),
+        Axis::LPad => pad_value(state.lpad),
+        Axis::RPad => pad_value(state.rpad),
+        Axis::Lt | Axis::Rt => (0, 0),
+    }
+}
+
+/// The key a flick holds: past the deadzone, the dominant direction. A held key stays until the
+/// stick drops below [`FLICK_RELEASE`] of the deadzone, so noise at the edge sends one key.
+fn flick(
+    (x, y): (i16, i16),
+    [up, down, left, right]: [u16; 4],
+    deadzone: f32,
+    held: Option<u16>,
+) -> Option<u16> {
+    let radius = deadzone * i16::MAX as f32;
+    let length = ((x as f32).powi(2) + (y as f32).powi(2)).sqrt();
+    if length < radius * FLICK_RELEASE {
+        return None;
+    }
+    if length < radius {
+        return held;
+    }
+    let key = match (x.unsigned_abs() > y.unsigned_abs(), x > 0, y > 0) {
+        (true, true, _) => right,
+        (true, false, _) => left,
+        (false, _, true) => up,
+        (false, _, false) => down,
+    };
+    Some(key)
 }
 
 fn stick_value(stick: Stick) -> (i16, i16) {
@@ -586,12 +671,12 @@ mod test {
 
     const SETTOP: &str = r#"
         [daemon]
-        active = "settop"
+        active = "pad"
 
-        [profile.settop.buttons]
+        [profile.pad.buttons]
         steam = "key:KEY_HOMEPAGE"
 
-        [[profile.settop.chord]]
+        [[profile.pad.chord]]
         hold = "view"
         dpad_up = "key:KEY_VOLUMEUP"
         dpad_down = "key:KEY_VOLUMEDOWN"
@@ -740,6 +825,32 @@ mod test {
     }
 
     #[test]
+    fn test_mapper_flick() {
+        let config = Config::parse(include_str!("../../../examples/settop.toml")).unwrap();
+        let mut mapper = Mapper::new(config.get("browser").unwrap());
+        let idle = ControllerState::default();
+        let mut up = idle;
+        up.lstick = Stick { x: 1000, y: 20000 };
+        let mut edge = idle;
+        edge.lstick = Stick { x: 0, y: 15000 };
+        let mut left = idle;
+        left.lstick = Stick { x: -30000, y: 0 };
+        let key_up = evdev::KeyCode::KEY_UP.0;
+        let key_left = evdev::KeyCode::KEY_LEFT.0;
+        // Inside the deadzone nothing; one press per flick, held while it stays out
+        assert_eq!(mapper.map(&idle, &edge), vec![]);
+        assert_eq!(mapper.map(&edge, &up), vec![Output::Key(key_up, true)]);
+        assert_eq!(mapper.map(&up, &up), vec![]);
+        assert_eq!(mapper.map(&up, &edge), vec![]);
+        assert_eq!(
+            mapper.map(&edge, &left),
+            vec![Output::Key(key_up, false), Output::Key(key_left, true)]
+        );
+        assert_eq!(mapper.release_all(), vec![Output::Key(key_left, false)]);
+        assert_eq!(mapper.map(&left, &idle), vec![]);
+    }
+
+    #[test]
     fn test_config_default() {
         assert_eq!(Config::default().profile().unwrap(), Profile::xbox());
         assert_eq!(
@@ -767,5 +878,9 @@ mod test {
         let profile = config.profile().unwrap();
         assert_eq!(profile, Config::parse(SETTOP).unwrap().profile().unwrap());
         assert_eq!(config.daemon.lizard, Lizard::Off);
+        // The keyboard enables the keys of every profile, not just the active one
+        let keys = config.keys();
+        assert!(keys.contains(&evdev::KeyCode::KEY_BACKSPACE.0));
+        assert!(keys.contains(&evdev::KeyCode::KEY_LEFT.0));
     }
 }

@@ -24,6 +24,12 @@ const PRODUCT: u16 = 0x0001;
 const EV_SYN: u16 = 0x00;
 const EV_KEY: u16 = 0x01;
 const EV_REP: u16 = 0x14;
+const REP_DELAY: u16 = 0x00;
+const REP_PERIOD: u16 = 0x01;
+
+/// Autorepeat of held keys, in ms: slow enough that a stick flick sends one arrow.
+const DELAY: i32 = 400;
+const PERIOD: i32 = 150;
 
 /// Always enabled, on top of whatever the profiles bind.
 pub const DEFAULT_KEYS: [KeyCode; 7] = [
@@ -70,7 +76,10 @@ impl Keys {
         }
         unsafe { ui_dev_setup(fd, &setup) }?;
         unsafe { ui_dev_create(fd) }?;
-        Ok(Self { file, keys })
+        let mut keys = Self { file, keys };
+        keys.write(EV_REP, REP_DELAY, DELAY)?;
+        keys.write(EV_REP, REP_PERIOD, PERIOD)?;
+        Ok(keys)
     }
 
     /// Emit the key outputs; pad outputs are skipped.
