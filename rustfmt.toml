@@ -1,0 +1,4 @@
+# group_imports and imports_granularity are nightly-only; stable rustfmt warns and skips them
+group_imports = "StdExternalCrate"
+imports_granularity = "Item"
+fn_params_layout = "Vertical"

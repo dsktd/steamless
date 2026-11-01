@@ -1,0 +1,13 @@
+[package]
+name = "steamless-core"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+crossbeam-channel.workspace = true
+evdev.workspace = true
+log.workspace = true
+nix.workspace = true
+serde.workspace = true
+toml.workspace = true

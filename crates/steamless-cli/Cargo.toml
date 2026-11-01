@@ -1,0 +1,12 @@
+[package]
+name = "steamless-cli"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+steamless-core.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+crossbeam-channel.workspace = true
+env_logger.workspace = true
+log.workspace = true
