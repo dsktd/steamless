@@ -1,7 +1,5 @@
 //! Virtual Xbox 360 pad, one per controller.
 
-use std::ffi::CString;
-
 use anyhow::anyhow;
 use evdev::AbsInfo;
 use evdev::AbsoluteAxisCode;
@@ -51,7 +49,7 @@ impl Pad {
         let stick = AbsInfo::new(0, i16::MIN as i32, i16::MAX as i32, 16, 128, 0);
         let trigger = AbsInfo::new(0, 0, 255, 0, 0, 0);
         let hat = AbsInfo::new(0, -1, 1, 0, 0, 0);
-        let phys = CString::new(phys)?;
+        let _ = phys; // TODO uniq/phys: UI_SET_PHYS returns EINVAL here, investigate
         let builder = match VirtualDevice::builder() {
             Ok(builder) => builder,
             Err(err) => return Err(anyhow!("Cannot open {UINPUT}: {err}")),
@@ -59,7 +57,6 @@ impl Pad {
         let device = builder
             .name(NAME)
             .input_id(InputId::new(BusType::BUS_USB, VENDOR, PRODUCT, VERSION))
-            .with_phys(&phys)?
             .with_keys(&keys)?
             .with_absolute_axis(&UinputAbsSetup::new(AbsoluteAxisCode::ABS_X, stick))?
             .with_absolute_axis(&UinputAbsSetup::new(AbsoluteAxisCode::ABS_Y, stick))?
