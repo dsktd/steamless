@@ -1,3 +1,24 @@
+use std::path::Path;
+
+use anyhow::anyhow;
+
+use crate::Result;
+
+mod keys;
+mod pad;
+pub use keys::*;
+pub use pad::*;
+
+pub const UINPUT: &str = "/dev/uinput";
+
+/// Fail early, by name, when the uinput module is not loaded.
+pub fn check_uinput() -> Result<()> {
+    if !Path::new(UINPUT).exists() {
+        return Err(anyhow!("{UINPUT} is missing; load the uinput module"));
+    }
+    Ok(())
+}
+
 /// Buttons of the virtual Xbox 360 pad; the D-pad becomes the hat.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum PadButton {
