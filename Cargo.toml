@@ -14,4 +14,8 @@ members = [
 steamless-core = { path = "crates/steamless-core" }
 
 anyhow = "1"
+crossbeam-channel = "0.5.17"
 log = "0.4.35"
+
+# DEVICE
+nix = { version = "0.31.3", features = ["ioctl"] } # https://github.com/nix-rust/nix
