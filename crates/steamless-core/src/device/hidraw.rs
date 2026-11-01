@@ -136,7 +136,9 @@ impl Hidraw {
             // Empty puck slots and the pogo interface refuse commands
             debug!("{id} lizard off: {err}");
         }
-        tx_event.send(Event::Opened(id, self.path.clone())).unwrap();
+        if tx_event.send(Event::Opened(id, self.path.clone())).is_err() {
+            return;
+        }
         let mut buf = [0_u8; 64];
         loop {
             let len = match self.read(&mut buf) {
@@ -157,8 +159,16 @@ impl Hidraw {
                 }
             };
             match report {
-                Report::Input(state) => tx_event.send(Event::State(id, state)).unwrap(),
-                Report::Battery(battery) => tx_event.send(Event::Battery(id, battery)).unwrap(),
+                Report::Input(state) => {
+                    if tx_event.send(Event::State(id, state)).is_err() {
+                        return;
+                    }
+                }
+                Report::Battery(battery) => {
+                    if tx_event.send(Event::Battery(id, battery)).is_err() {
+                        return;
+                    }
+                }
                 Report::Wireless(wireless) => {
                     if lizard_off
                         && wireless == Wireless::Connect
@@ -166,12 +176,14 @@ impl Hidraw {
                     {
                         warn!("{id} lizard off: {err}");
                     }
-                    tx_event.send(Event::Wireless(id, wireless)).unwrap();
+                    if tx_event.send(Event::Wireless(id, wireless)).is_err() {
+                        return;
+                    }
                 }
                 Report::Other(report_id) => trace!("{id} unhandled report {report_id:#04x}"),
             }
         }
-        tx_event.send(Event::Closed(id)).unwrap();
+        let _ = tx_event.send(Event::Closed(id));
     }
 }
 
