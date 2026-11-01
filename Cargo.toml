@@ -18,4 +18,9 @@ crossbeam-channel = "0.5.17"
 log = "0.4.35"
 
 # DEVICE
+evdev = "0.13.2" # https://github.com/emberian/evdev
 nix = { version = "0.31.3", features = ["ioctl"] } # https://github.com/nix-rust/nix
+
+# CONFIG
+serde = { version = "1.0.229", features = ["derive"] } # https://github.com/serde-rs/serde
+toml = "0.9.12" # https://github.com/toml-rs/toml
