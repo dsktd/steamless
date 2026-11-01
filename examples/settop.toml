@@ -1,0 +1,21 @@
+# Kiosk profile for the settop: Steam goes home, view + D-pad drives the volume.
+# Anything not listed keeps the built-in Xbox layout.
+
+[daemon]
+active = "settop"
+lizard = "off"
+
+[profile.settop]
+layout = "xbox"
+deadzone.stick = 0.10
+deadzone.trigger = 0.05
+
+[profile.settop.buttons]
+steam = "key:KEY_HOMEPAGE"
+
+# Hold view: D-pad up/down/left are volume up/down/mute. Tapped alone, view is still select.
+[[profile.settop.chord]]
+hold = "view"
+dpad_up = "key:KEY_VOLUMEUP"
+dpad_down = "key:KEY_VOLUMEDOWN"
+dpad_left = "key:KEY_MUTE"

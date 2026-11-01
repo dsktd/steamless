@@ -673,4 +673,12 @@ mod test {
                 .is_err()
         );
     }
+
+    #[test]
+    fn test_config_example_settop() {
+        let config = Config::parse(include_str!("../../../examples/settop.toml")).unwrap();
+        let profile = config.profile().unwrap();
+        assert_eq!(profile, Config::parse(SETTOP).unwrap().profile().unwrap());
+        assert_eq!(config.daemon.lizard, Lizard::Off);
+    }
 }
