@@ -16,7 +16,7 @@ steamless-core = { path = "crates/steamless-core" }
 steamless-ipc = { path = "crates/steamless-ipc" }
 
 anyhow = "1"
-clap = { version = "4.6.7", features = ["derive"] }
+clap = { version = "4.6.7", features = ["derive", "env"] }
 crossbeam-channel = "0.5.17"
 dirs = "6.0.0"
 env_logger = "0.11.11"
