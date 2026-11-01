@@ -513,6 +513,9 @@ name = "steamless-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "clap",
+ "crossbeam-channel",
+ "env_logger",
  "log",
  "steamless-core",
 ]
