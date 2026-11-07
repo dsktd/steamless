@@ -1,0 +1,15 @@
+[package]
+name = "yakin-ipc"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+yakin-core.workspace = true
+anyhow.workspace = true
+bincode.workspace = true
+crossbeam-channel.workspace = true
+dirs.workspace = true
+log.workspace = true
+nix = { workspace = true, features = ["poll", "user"] }
+serde.workspace = true

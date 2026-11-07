@@ -1,0 +1,12 @@
+yakin's own code and files are public domain (see UNLICENSE). The controller drawing, the app
+icon and the 3D model are not part of that dedication.
+
+They are made at build time (cad/default.nix) from Valve's Steam Controller shell CAD,
+https://gitlab.steamos.cloud/SteamHardware/SteamController, commit
+e10919b4b86249817aaca1160aa136ef5622c533, file sc_solid_stl_20260429.stl. Copyright 2026 Valve
+Corporation, licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0
+International, https://creativecommons.org/licenses/by-nc-sa/4.0/. The generated files are
+adaptations shared under the same licence; Valve's licence text ships next to them as LICENSE.
+yakin is not associated with or endorsed by Valve.
+
+The scripts that make them (cad/drawing.py, cad/convert.py) are yakin's code and public domain.

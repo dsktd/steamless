@@ -1,0 +1,47 @@
+[package]
+name = "yakin-view"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[features]
+default = ["window"]
+# The standalone window on Wayland with its HUD and the daemon thread. Without it the crate is
+# the scene alone (layout, model, orbit), which yakin-ui draws into its page
+window = [
+	"dep:yakin-ipc",
+	"dep:anyhow",
+	"dep:clap",
+	"dep:crossbeam-channel",
+	"bevy/bevy_winit",
+	"bevy/wayland",
+	"bevy/ui_api",
+	"bevy/ui_bevy_render",
+	"bevy/default_font",
+]
+
+[[bin]]
+name = "yakin-view"
+required-features = ["window"]
+
+[dependencies]
+yakin-core.workspace = true
+yakin-ipc = { workspace = true, optional = true }
+anyhow = { workspace = true, optional = true }
+clap = { workspace = true, optional = true }
+crossbeam-channel = { workspace = true, optional = true }
+log.workspace = true
+
+# BEVY
+# Wayland only: no x11, no audio, no gamepads. The window's features are above
+bevy = { version = "0.20.1", default-features = false, features = [
+	"default_app",
+	"std",
+	"multi_threaded",
+	"3d_bevy_render",
+	"picking",
+	"mesh_picking",
+	"tonemapping_luts",
+	"ktx2",
+	"zstd_rust",
+] } # https://github.com/bevyengine/bevy

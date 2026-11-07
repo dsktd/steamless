@@ -1,0 +1,69 @@
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "Unlicense"
+
+[workspace]
+resolver = "3"
+members = [
+	"crates/yakin-core",
+	"crates/yakin-ipc",
+	"crates/yakin-daemon",
+	"crates/yakin-cli",
+	"crates/yakin-import",
+	"crates/yakin-ui",
+	"crates/yakin-osd",
+	"crates/yakin-tray",
+	"crates/yakin-view",
+]
+# yakin-ui is Blitz (a renderer) and yakin-view is Bevy; build them on purpose with -p (just ui, just view)
+default-members = [
+	"crates/yakin-core",
+	"crates/yakin-ipc",
+	"crates/yakin-daemon",
+	"crates/yakin-cli",
+	"crates/yakin-import",
+	"crates/yakin-osd",
+	"crates/yakin-tray",
+]
+# Third-party crates ported by hand (vendor/*/VENDOR): their own code, not held to this
+# workspace's lints and format
+exclude = [
+	"vendor/dioxus-primitives/primitives",
+	"vendor/dioxus-primitives/dioxus-attributes",
+]
+
+[workspace.dependencies]
+yakin-core = { path = "crates/yakin-core" }
+yakin-ipc = { path = "crates/yakin-ipc" }
+yakin-import = { path = "crates/yakin-import" }
+
+anyhow = "1"
+clap = { version = "4.6.7", features = ["derive", "env"] }
+crossbeam-channel = "0.5.17"
+dirs = "6.0.0"
+env_logger = "0.11.11"
+log = "0.4.35"
+
+# DEVICE
+evdev = "0.13.2" # https://github.com/emberian/evdev
+nix = { version = "0.31.3", features = ["ioctl", "poll"] } # https://github.com/nix-rust/nix
+
+# IPC
+bincode = "2.0.1" # https://github.com/bincode-org/bincode
+
+# PROFILES FOLLOW FOCUS
+regex = "1.13.1" # https://github.com/rust-lang/regex
+serde_json = "1.0.154" # https://github.com/serde-rs/json
+
+# CONFIG
+serde = { version = "1.0.229", features = ["derive"] } # https://github.com/serde-rs/serde
+toml = "0.9.12" # https://github.com/toml-rs/toml
+
+# The local run loop (just daemon/ui/cli/osd): release speed, but incremental and split into
+# many codegen units so a one-line change relinks in about a second instead of 6-19 s.
+# Nix packages keep the plain release profile.
+[profile.fast]
+inherits = "release"
+incremental = true
+codegen-units = 256

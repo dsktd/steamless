@@ -1,0 +1,6 @@
+The Rust and CSS files in this directory are copied, with the class names made plain
+strings, from preview/src/components and preview/assets of
+https://github.com/DioxusLabs/components at revision 9a758255ea26e2b20c8cecf4c1c946feb9e71da7,
+licensed MIT (LICENSE-MIT here) or Apache-2.0 at your option. The primitives they wrap are
+the same project's, carried in vendor/dioxus-primitives (its licences and the port's
+changes noted there). The rest of yakin is public domain (UNLICENSE).

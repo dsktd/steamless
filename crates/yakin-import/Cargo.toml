@@ -1,0 +1,12 @@
+[package]
+name = "yakin-import"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+yakin-core.workspace = true
+anyhow.workspace = true
+toml.workspace = true
+
+keyvalues-parser = "0.2.4" # https://github.com/CosmicHorrorDev/vdf-rs

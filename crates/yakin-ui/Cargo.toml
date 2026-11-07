@@ -1,0 +1,34 @@
+[package]
+name = "yakin-ui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+yakin-core.workspace = true
+yakin-ipc.workspace = true
+clap.workspace = true
+env_logger.workspace = true
+log.workspace = true
+regex.workspace = true
+
+# UI: Dioxus drawn by Blitz, no webview and no JavaScript. 0.8 alphas only: 0.7's dioxus-native is on an older wgpu
+dioxus = { version = "=0.8.0-alpha.3", default-features = false, features = ["macro", "hooks", "signals", "html", "launch"] } # https://github.com/DioxusLabs/dioxus
+dioxus-native = { version = "=0.8.0-alpha.3", default-features = false, features = ["vello-hybrid", "html", "svg", "net", "system-fonts", "clipboard", "accessibility", "autofocus"] } # https://github.com/DioxusLabs/blitz
+# Not on crates.io: the shadcn-style primitives, pinned to a commit and ported to 0.8 by hand (vendor/dioxus-primitives/VENDOR)
+dioxus-primitives = { path = "../../vendor/dioxus-primitives/primitives", default-features = false } # https://github.com/DioxusLabs/components
+tokio = { version = "1", features = ["sync", "time"] } # https://github.com/tokio-rs/tokio; the runtime dioxus-native runs on
+
+# 3D: the scene from yakin-view (no window of its own), drawn by Bevy into a texture on Blitz's wgpu
+# device and shown by a custom widget. Bevy's features are the scene's; wgpu is the version Bevy 0.20
+# and Blitz share
+yakin-view = { path = "../yakin-view", default-features = false }
+bevy = { version = "0.20.1", default-features = false, features = ["default_app", "std", "3d_bevy_render", "mesh_picking"] } # https://github.com/bevyengine/bevy
+anyrender = "0.14" # https://github.com/DioxusLabs/blitz
+blitz-dom = { version = "=0.3.0-beta.4", default-features = false, features = ["custom-widget"] }
+blitz-traits = "=0.3.0-beta.4"
+peniko = "0.6.1"
+wgpu = "30.0.1" # https://github.com/gfx-rs/wgpu
+
+[dev-dependencies]
+serde_json.workspace = true

@@ -1,0 +1,187 @@
+# Kiosk profiles for the settop: `pad` while a game runs, `browser` while the browser is up,
+# `desktop` to drive the Niri session: trackpads as a mouse, bumpers and sticks for Niri actions.
+# Switch with `yakin-cli activate browser`. Anything not listed keeps the built-in Xbox layout.
+
+[daemon]
+active = "pad"
+lizard = "off"
+# Close the controller and drop the virtual pad while Steam holds it open, take it back after
+steam = "yield"
+
+# The profile follows Niri's focused window: games and emulators get `pad`, anything else
+# `desktop`. Rules are regexes on the app id (and an optional `title`), first match wins.
+# Steam + Y or the quick menu still switch by hand; that holds until another app is focused.
+[auto]
+enabled = true
+default = "desktop"
+
+# Steam games run under their own app id, steam_app_<appid>
+[[auto.rule]]
+app_id = "^steam_app_"
+profile = "pad"
+
+# Games Steam starts inside gamescope
+[[auto.rule]]
+app_id = "^gamescope$"
+profile = "pad"
+
+[[auto.rule]]
+app_id = "^dolphin-emu$"
+profile = "pad"
+
+[[auto.rule]]
+app_id = "^PCSX2$"
+profile = "pad"
+
+[[auto.rule]]
+app_id = '^org\.libretro\.RetroArch$'
+profile = "pad"
+
+# Xbox pad; Steam goes home, view + D-pad drives the volume.
+[profile.pad]
+layout = "xbox"
+deadzone.stick = 0.10
+deadzone.trigger = 0.05
+stick.touch = true  # sticks only count while a finger rests on the cap; false reads them raw
+
+[profile.pad.buttons]
+steam = "key:KEY_HOMEPAGE"
+quick = "menu:toggle"   # the "..." button opens the quick menu below
+
+# Hold view: D-pad up/down/left are volume up/down/mute. Tapped alone, view is still select.
+[[profile.pad.chord]]
+hold = "view"
+dpad_up = "key:KEY_VOLUMEUP"
+dpad_down = "key:KEY_VOLUMEDOWN"
+dpad_left = "key:KEY_MUTE"
+
+# Hold steam, press Y: switch to desktop. The switch fires when Y is released, so nothing
+# leaks into desktop; tapped alone, steam still goes home (on its release).
+[[profile.pad.chord]]
+hold = "steam"
+y = "profile:desktop"
+
+# Arrow keys for page navigation; the left stick flicks them, one key per flick.
+[profile.browser]
+layout = "xbox"
+deadzone.stick = 0.5
+
+[profile.browser.buttons]
+dpad_up = "key:KEY_UP"
+dpad_down = "key:KEY_DOWN"
+dpad_left = "key:KEY_LEFT"
+dpad_right = "key:KEY_RIGHT"
+a = "key:KEY_ENTER"
+b = "key:KEY_BACKSPACE"
+steam = "key:KEY_HOMEPAGE"
+
+[profile.browser.axes]
+lstick = "keys:KEY_UP,KEY_DOWN,KEY_LEFT,KEY_RIGHT"
+
+[[profile.browser.chord]]
+hold = "view"
+dpad_up = "key:KEY_VOLUMEUP"
+dpad_down = "key:KEY_VOLUMEDOWN"
+dpad_left = "key:KEY_MUTE"
+
+# Mouse mode: right pad moves the cursor, left pad scrolls, A/X and the right pad click are
+# the mouse buttons.
+[profile.desktop]
+layout = "xbox"
+mouse.speed = 1.0
+mouse.accel = 1.3
+# Reports each pad delta waits, so the twitch of a lifting finger is dropped (0-20)
+mouse.release_guard = 3
+# 1€ filter on pad motion: damps slow jitter, lets flicks through (0 = off, 1 = strongest)
+mouse.smoothing = 0.5
+scroll.speed = 1.0
+scroll.natural = true
+
+# Sticks bound to "cursor" or "scroll" (in place of a pad above): px/s and notches/s at full
+# deflection, and the response curve's exponent (1 = linear, up to 3)
+# mouse.stick_speed = 1000
+# mouse.stick_curve = 1.6
+# scroll.stick_speed = 10
+
+[profile.desktop.buttons]
+# 10-foot desktop on Niri (assumed 2026-11-02, to review): A/B are Enter/Esc for menus and the
+# launcher; clicking stays on the right pad click and RT (Cal, 2026-11-01), LT is right click.
+a = "key:KEY_ENTER"
+b = "key:KEY_ESC"
+x = "desktop:fullscreen"                     # fullscreen the focused window, again to restore
+y = "menu:toggle"                            # the quick menu (Cal, 2026-11-02)
+rpad_click = "mouse:left"
+rt_full = "mouse:left"
+lt_full = "mouse:right"
+lpad_click = "mouse:middle"
+menu = "desktop:spawn:fuzzel"                # the launcher
+view = "niri:switch-preset-column-width"     # niri only, no common action; tapped alone: half, two thirds, full; held: volume
+steam = "desktop:overview"                   # tapped alone; held, the steam chord below
+quick = "menu:toggle"                        # the quick menu ([menu] below)
+lb = "desktop:workspace-up"                  # previous workspace
+rb = "desktop:workspace-down"                # next workspace
+dpad_up = "key:KEY_UP"                       # arrows for fuzzel, menus and pages
+dpad_down = "key:KEY_DOWN"
+dpad_left = "key:KEY_LEFT"
+dpad_right = "key:KEY_RIGHT"
+# Back grips: unbound for now (Cal, 2026-11-02)
+
+[profile.desktop.axes]
+rpad = "cursor"
+lpad = "scroll"
+# Flicks move Niri's focus between windows and columns; the D-pad is the arrow keys
+lstick = "flicks:desktop:focus-up,desktop:focus-down,desktop:focus-left,desktop:focus-right"
+
+[[profile.desktop.chord]]
+hold = "view"
+dpad_up = "key:KEY_VOLUMEUP"
+dpad_down = "key:KEY_VOLUMEDOWN"
+dpad_left = "key:KEY_MUTE"
+
+# Steam + Y back to pad; tapped alone, steam is still the Meta key.
+[[profile.desktop.chord]]
+hold = "steam"
+y = "profile:pad"                                # back to the plain Xbox pad
+a = "desktop:maximize"
+b = "desktop:close-window"                       # close the focused window
+x = "desktop:screenshot"
+menu = "keyboard:toggle"                         # on-screen keyboard (or wvkbd, see [menu])
+dpad_left = "desktop:move-left"
+dpad_right = "desktop:move-right"
+dpad_up = "niri:move-window-to-workspace-up"   # niri only: desktop:move-up stays in the workspace
+dpad_down = "niri:move-window-to-workspace-down"
+
+# The quick menu, opened by a `menu:toggle` button. While it is up the controller drives it:
+# D-pad or left stick move, A (or the right pad click, or RT) fires the item and closes it,
+# B or the menu button closes it. This is the built-in default, written out to edit; without
+# [menu] it is the same. Targets are any button target (desktop:, niri:, key:, mouse:, profile:, keyboard:); icons:
+# apps keyboard overview fullscreen close volume-up volume-down mute gamepad mouse screenshot
+# display-off power.
+[menu]
+columns = 4
+items = [
+    { label = "Launcher", icon = "apps", target = "desktop:spawn:fuzzel" },
+    # yakin's own keyboard; for wvkbd instead (touch, mouse), "desktop:spawn:pkill -SIGRTMIN wvkbd-mobintl"
+    # with wvkbd already running hidden (spawn-at-startup "wvkbd-mobintl" "--hidden")
+    { label = "Keyboard", icon = "keyboard", target = "keyboard:toggle" },
+    { label = "Overview", icon = "overview", target = "desktop:overview" },
+    { label = "Fullscreen", icon = "fullscreen", target = "desktop:fullscreen" },
+    { label = "Maximize", icon = "maximize", target = "desktop:maximize" },
+    { label = "Close", icon = "close", target = "desktop:close-window" },
+    { label = "Volume up", icon = "volume-up", target = "key:KEY_VOLUMEUP" },
+    { label = "Volume down", icon = "volume-down", target = "key:KEY_VOLUMEDOWN" },
+    { label = "Mute", icon = "mute", target = "key:KEY_MUTE" },
+    { label = "Pad mode", icon = "gamepad", target = "profile:pad" },
+    { label = "Desktop mode", icon = "mouse", target = "profile:desktop" },
+    { label = "Screen off", icon = "display-off", target = "desktop:screen-off" },
+]
+
+# Flick stick for a mouse-look game: pushing the right stick turns to where it points, in one
+# eased step of mouse.flick_ms; rotating it while held keeps turning. mouse.flick_degrees is the
+# pixels the game needs for a full 360.
+# [profile.shooter]
+# mouse.flick_degrees = 2400
+# mouse.flick_ms = 100
+#
+# [profile.shooter.axes]
+# rstick = "flick"

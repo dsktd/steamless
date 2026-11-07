@@ -1,0 +1,17 @@
+dioxus-primitives and dioxus-attributes from https://github.com/DioxusLabs/components at
+revision 9a758255ea26e2b20c8cecf4c1c946feb9e71da7 (MIT or Apache-2.0 at your option,
+LICENSE-MIT and LICENSE-APACHE here), ported to Dioxus 0.8.0-alpha.3: named keys are
+Key::Named(NamedKey::..), Key and ClientPoint come from dioxus::html, VNode::key is a
+method, the attributes! macro takes the boxed slice 0.8 renders event handlers as, the
+navbar adds its listeners through attributes!, and the toast provider fills ToastProps
+itself. The manifests name their dependency versions instead of a workspace. The preview
+and test harness are not here.
+
+Two changes of behaviour for Blitz, which makes no click out of Enter or Space on a button:
+the select trigger and the tab trigger open or select on those keys themselves (marked
+"(yakin)" in the source).
+A third: use_animated_open hides a closed element at once instead of awaiting its exit
+animation through document::eval, which does nothing under Blitz and left the closed select
+list in the DOM as an unseen tab stop.
+A fourth: the select trigger takes the focus back when its list closes; Blitz drops the focus
+with the list's element and the next Tab would start over from the top of the page.

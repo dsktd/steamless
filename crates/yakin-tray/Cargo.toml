@@ -1,0 +1,19 @@
+[package]
+name = "yakin-tray"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+yakin-core.workspace = true
+yakin-ipc.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+env_logger.workspace = true
+log.workspace = true
+
+# STATUS NOTIFIER ITEM
+ksni = { version = "0.3.7", features = ["blocking"] } # https://github.com/iovxw/ksni
+
+# ICON
+png = "0.18.1" # https://github.com/image-rs/image-png

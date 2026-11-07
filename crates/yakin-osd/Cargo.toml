@@ -1,0 +1,19 @@
+[package]
+name = "yakin-osd"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+yakin-core.workspace = true
+yakin-ipc.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+env_logger.workspace = true
+log.workspace = true
+
+# WAYLAND
+smithay-client-toolkit = { version = "0.21.1", default-features = false, features = ["calloop"] } # https://github.com/Smithay/client-toolkit
+
+# DRAWING
+resvg = { version = "0.49.0", default-features = false, features = ["text", "system-fonts", "memmap-fonts"] } # https://github.com/linebender/resvg

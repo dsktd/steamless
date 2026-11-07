@@ -1,0 +1,6 @@
+/target
+.#*
+/result
+/crates/yakin-ui/gen
+/ui/assets
+__pycache__

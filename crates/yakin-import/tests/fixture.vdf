@@ -1,0 +1,235 @@
+// Hand-written for the importer tests, shaped like a Steam Input config.
+"controller_mappings"
+{
+	"version"		"3"
+	"title"		"A \"quoted\" title"
+	"group"
+	{
+		"id"		"0"
+		"mode"		"four_buttons"
+		"inputs"
+		{
+			"button_a"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"xinput_button A, Jump, "
+						}
+						"settings"
+						{
+							"hold_repeats"		"1"
+							"repeat_rate"		"10"
+						}
+					}
+					"Double_Press"
+					{
+						"bindings"
+						{
+							"binding"		"mouse_button MIDDLE"
+						}
+						"settings"
+						{
+							"doubetap_max_duration"		"300"
+						}
+					}
+					"Start_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press F"
+						}
+					}
+					"release"
+					{
+						"bindings"
+						{
+							"binding"		"key_press G"
+						}
+					}
+					"Soft_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press H"
+						}
+					}
+				}
+			}
+			"button_B"
+			{
+				"activators"
+				{
+					"full_press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press ESCAPE"
+							"binding"		"key_press TAB"
+						}
+					}
+					"Long_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press Q"
+						}
+						"settings"
+						{
+							"long_press_time"		"500"
+						}
+					}
+				}
+			}
+			"button_x"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"game_action menu open"
+						}
+					}
+				}
+			}
+			"button_y"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"mode_shift button_diamond 9"
+						}
+					}
+				}
+			}
+		}
+	}
+	"group"
+	{
+		"id"		"1"
+		"mode"		"dpad"
+		"bindings"
+		{
+			"dpad_north"		"key_press UP_ARROW"
+			"dpad_south"		"key_press DOWN_ARROW"
+		}
+	}
+	"group"
+	{
+		"id"		"2"
+		"mode"		"joystick_move"
+		"bindings"
+		{
+			"click"		"xinput_button JOYSTICK_LEFT"
+		}
+		"settings"
+		{
+			"deadzone"		"2000"
+		}
+	}
+	"group"
+	{
+		"id"		"3"
+		"mode"		"dpad"
+		"bindings"
+		{
+			"dpad_north"		"key_press W"
+			"dpad_south"		"key_press S"
+			"dpad_west"		"key_press A"
+			"dpad_east"		"key_press D"
+		}
+	}
+	"group"
+	{
+		"id"		"4"
+		"mode"		"trigger"
+		"bindings"
+		{
+			"click"		"mouse_button RIGHT"
+		}
+		"settings"
+		{
+			"output_trigger"		"1"
+		}
+	}
+	"group"
+	{
+		"id"		"5"
+		"mode"		"absolute_mouse"
+		"bindings"
+		{
+			"click"		"mouse_button LEFT"
+		}
+		"settings"
+		{
+			"sensitivity"		"150"
+		}
+	}
+	"group"
+	{
+		"id"		"6"
+		"mode"		"scrollwheel"
+		"bindings"
+		{
+			"scroll_clockwise"		"mouse_wheel SCROLL_DOWN"
+		}
+	}
+	"group"
+	{
+		"id"		"7"
+		"mode"		"switches"
+		"bindings"
+		{
+			"button_escape"		"key_press RETURN"
+			"left_bumper"		"mouse_button MIDDLE"
+		}
+	}
+	"group"
+	{
+		"id"		"8"
+		"mode"		"flickstick"
+	}
+	"group"
+	{
+		"id"		"9"
+		"mode"		"four_buttons"
+		"bindings"
+		{
+			"button_a"		"key_press VOLUME_UP"
+		}
+	}
+	"preset"
+	{
+		"id"		"0"
+		"name"		"Default"
+		"group_source_bindings"
+		{
+			"0"		"button_diamond active"
+			"1"		"dpad active"
+			"2"		"joystick active"
+			"3"		"right_joystick active"
+			"4"		"right_trigger active"
+			"5"		"right_trackpad active"
+			"6"		"left_trackpad active"
+			"7"		"switch active"
+			"9"		"button_diamond active modeshift"
+		}
+	}
+	"preset"
+	{
+		"id"		"1"
+		"name"		"Other"
+		"group_source_bindings"
+		{
+			"8"		"right_joystick active"
+		}
+	}
+}

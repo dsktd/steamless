@@ -1,0 +1,19 @@
+# A drop-in over examples/settop.toml: only what it names changes.
+# Try it with `just daemon --config examples/settop.toml --config-dir examples/config.d`.
+
+# x is now the middle button in desktop; desktop's other bindings stay as the baseline has them
+[profile.desktop.buttons]
+x = "mouse:middle"
+
+# Hold steam to use the controller's own mouse and arrow keys (lizard mode); a tap still opens
+# the overview. Nothing of yakin's goes out while it is held. `lizard:toggle` flips it per press.
+[profile.desktop.buttons.steam]
+press = "desktop:overview"
+long = "lizard:hold"
+long_ms = 300
+
+# A new profile, whole
+[profile.media.buttons]
+a = "key:KEY_PLAYPAUSE"
+lb = "key:KEY_PREVIOUSSONG"
+rb = "key:KEY_NEXTSONG"
